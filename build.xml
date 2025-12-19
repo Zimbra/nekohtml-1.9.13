@@ -356,5 +356,36 @@ public class Version {
 			<localrepository path="${build.dir}/mvn"/>
 		</artifact:deploy>
 	</target>
+
+	<target name="sonar-scan" depends="compile" unless="skipSonarScan" description="Run SonarQube analysis">
+
+		<property environment="env"/>
+
+		<path id="sonar.classpath">
+			<fileset dir="${lib.dir}">
+				<include name="**/*.jar" />
+			</fileset>
+		</path>
+
+		<pathconvert property="sonar.libraries.list" refid="sonar.classpath" pathsep=","/>
+
+		<fail message="SONAR_HOST_URL environment variable not set" unless="env.SONAR_HOST_URL"/>
+		<fail message="SONAR_TOKEN environment variable not set" unless="env.SONAR_TOKEN"/>
+
+		<echo message="Running SonarQube scan for ${fullname}"/>
+
+		<exec executable="sonar-scanner" failonerror="true">
+			<arg value="-Dsonar.projectKey=${fullname}"/>
+			<arg value="-Dsonar.projectName=${fullname}"/>
+			<arg value="-Dsonar.projectBaseDir=${basedir}"/>
+			<arg value="-Dsonar.java.source=1.3"/>
+			<arg value="-Dsonar.sources=${src.dir}"/>
+			<arg value="-Dsonar.java.binaries=${build.classes.dir}"/>
+			<arg value="-Dsonar.java.libraries=${sonar.libraries.list}"/>
+			<arg value="-Dsonar.tests=${src.test.dir}"/>
+			<arg value="-Dsonar.host.url=${env.SONAR_HOST_URL}"/>
+			<arg value="-Dsonar.token=${env.SONAR_TOKEN}"/>
+		</exec>
+	</target>
 	
 </project>
