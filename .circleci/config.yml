@@ -69,7 +69,7 @@ references:
           at: ..
 
       - run:
-          name: Publishing nekohtml jars...
+          name: Publishing nekohtml jar...
           command: |
             sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl
 
@@ -80,31 +80,22 @@ references:
             ARTIFACT_VERSION=$(echo "$BUILD_RELEASE_NO" | cut -d'_' -f1)
             VERSION="${ARTIFACT_VERSION}.${GIT_TIMESTAMP}"
 
-            echo "Preparing jars for publishing: $VERSION"
+            echo "Preparing nekohtml.jar for publishing: $VERSION"
 
             cd build/lib
 
             TARGET_BASE="$HOME/.zcs-deps/zimbra"
+            MODULE="nekohtml"
+            TARGET_DIR="$TARGET_BASE/$MODULE"
 
-            for TYPE in nekohtml nekohtmlSamples
-            do
-              if [ "$TYPE" = "nekohtml" ]; then
-                MODULE="nekohtml"
-              else
-                MODULE="nekohtml-sample"
-              fi
+            mkdir -p "$TARGET_DIR"
+            export MODULE_LIST="$MODULE"
 
-              TARGET_DIR="$TARGET_BASE/$MODULE"
-              mkdir -p "$TARGET_DIR"
+            rm -f "$TARGET_DIR"/*.jar
+            cp nekohtml.jar "$TARGET_DIR/${MODULE}-${VERSION}.jar"
 
-              export MODULE_LIST="$MODULE"
-
-              rm -f "$TARGET_DIR"/*.jar
-              cp ${TYPE}.jar "$TARGET_DIR/${MODULE}-${VERSION}.jar"
-
-              echo "Uploading ${TYPE}.jar to ${MODULE}..."
-              bash ~/zm-nexus/scripts/publish-jars-to-nexus.sh "$TARGET_BASE"
-            done
+            echo "Uploading nekohtml.jar..."
+            bash ~/zm-nexus/scripts/publish-jars-to-nexus.sh "$TARGET_BASE"
 
             echo "Publish completed"
 
@@ -121,7 +112,6 @@ jobs:
           password: $DOCKER_PASS
     resource_class: small
     <<: *checkout_job_steps
-
   build:
     working_directory: ~/nekohtml-1.9.13
     shell: /bin/bash -eo pipefail
@@ -132,7 +122,6 @@ jobs:
           password: $DOCKER_PASS
     resource_class: medium
     <<: *build_job_steps
-
   publish:
     working_directory: ~/nekohtml-1.9.13
     shell: /bin/bash -eo pipefail
@@ -170,4 +159,4 @@ workflows:
           filters:
             branches:
               only:
-                - develop
+                - ZCS-18832
